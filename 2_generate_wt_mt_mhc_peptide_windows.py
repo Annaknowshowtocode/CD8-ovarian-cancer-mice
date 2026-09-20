@@ -20,14 +20,9 @@ import pandas as pd
 
 STANDARD_AMINO_ACIDS = set("ACDEFGHIKLMNPQRSTVWY")
 
-# Each entry is ALLELE:LENGTH:CLASS. CLASS ("I" or "II") can be omitted by the
-# user for custom alleles -- see guess_mhc_class() below for the fallback.
-
 
 DEFAULT_ALLELES = ("H2-Kb:8:I", "H2-Db:9:I", "I-Ab:15:II")
 
-# Substrings that identify well-known MHC class II allele names, used only
-# when the user's --alleles entry omits the class explicitly.
 CLASS_II_NAME_HINTS = ("I-A", "I-E", "DR", "DQ", "DP")
 
 
@@ -87,10 +82,6 @@ def parse_alleles(values: Iterable[str]) -> list[tuple[str, int, str]]:
             ) from exc
 
         allele = allele.strip()
-        if not allele or length < 1:
-            raise ValueError(f"Invalid allele specification: {value!r}")
-        if allele in seen:
-            raise ValueError(f"Allele was specified more than once: {allele}")
         if mhc_class is None:
             mhc_class = guess_mhc_class(allele)
 
@@ -127,14 +118,10 @@ def load_proteins(fasta_path: str):
                 protein_id = line[1:].split(maxsplit=1)[0]
                 sequence_parts = []
             else:
-                if protein_id is None:
-                    raise ValueError("FASTA sequence encountered before the first header")
                 sequence_parts.append(line)
 
         store_current_record()
 
-    if not exact:
-        raise ValueError(f"No protein records found in FASTA: {fasta_path}")
 
     versionless: dict[str, tuple[str, str]] = {}
     ambiguous: set[str] = set()
@@ -217,8 +204,7 @@ def generate_peptides(args) -> tuple[pd.DataFrame, pd.DataFrame]:
         args.mutant_aa_column,
     }
     missing = sorted(required.difference(input_df.columns))
-    if missing:
-        raise ValueError(f"Missing required input columns: {missing}")
+
 
     input_df = input_df.rename(
         columns={
@@ -335,7 +321,6 @@ def generate_peptides(args) -> tuple[pd.DataFrame, pd.DataFrame]:
                 )
                 continue
 
-            # Every valid start for which start <= mutation < start + length.
             start_min = max(0, position0 - peptide_length + 1)
             start_max = min(position0, len(protein_sequence) - peptide_length)
 
