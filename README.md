@@ -97,20 +97,19 @@ flowchart TD
 ```
 .
 ├── README.md
-├── scripts/
-│   ├── wgs_variant_calling/           # Part A: shell scripts, run in order
-│   │   ├── 01_run_minimap_alignment.sh
-│   │   ├── 02_run_mutation_calling.sh
-│   │   ├── 03_run_mutation_filtering.sh
-│   │   ├── 04_select_filtered_mutations.sh
-│   │   ├── 05_print_stats.sh
-│   │   ├── 06_norm_data.sh
-│   │   └── 07_run_vep_with_refseq_cache.sh
-│   └── neoantigen_prediction/         # Parts B–E
-│       ├── generate_wt_mt_mhc_peptide_windows.py
-│       ├── decoy_peptides.ipynb
-│       ├── affinity_tests.ipynb
-│       └── neoantigen_candidate_selection.ipynb
+├── wgs_variant_calling/               # Part A: shell scripts, run in order
+│   ├── 01_run_minimap_alignment.sh
+│   ├── 02_run_mutation_calling.sh
+│   ├── 03_run_mutation_filtering.sh
+│   ├── 04_select_filtered_mutations.sh
+│   ├── 05_print_stats.sh
+│   ├── 06_norm_data.sh
+│   └── 07_run_vep_with_refseq_cache.sh
+└── neoantigen_prediction/             # Parts B–E
+    ├── generate_wt_mt_mhc_peptide_windows.py
+    ├── decoy_peptides.ipynb
+    ├── affinity_tests.ipynb
+    └── neoantigen_candidate_selection.ipynb
 ```
 
 ---
@@ -188,30 +187,6 @@ Illumina bulk RNA-seq (three biological replicates per cell line) was quantified
 
 ---
 
-## Key numbers
-
-| Quantity | ID8 | ID8-CPR |
-|---|---|---|
-| Missense mutation records carried into peptide analysis | 1,103 | 1,070 |
-| MT 8-mer / 9-mer / 15-mer windows | 8,717 / 9,781 / 16,056 | 8,406 / 9,426 / 15,383 |
-| WT 8-mer / 9-mer / 15-mer windows (matched pairs) | 8,717 / 9,781 / 16,056 | 8,406 / 9,426 / 15,383 |
-| Decoy peptides used for percentile ranking | 100,000 per length (300,000 total) | |
-| Peptides scored in total | 135,538 target + 300,000 decoy | |
-
-*Variant counts after filtering (`bcftools stats` output), shared mutations between lines, and the final number of high-priority candidates:*
-
-| Quantity | ID8 | ID8-CPR |
-|---|---|---|
-| PASS SNVs / indels | … | … |
-| Mutations shared between lines | … | |
-| High-priority candidates (strong binder, top 5 % NER, top 5 % TPM) | … | … |
-
-### Top candidates
-
-*(Paste the top rows of `best_candidates_per_tool.xlsx` here: gene, WT peptide, MT peptide, WT/MT percentile rank, NER, TPM.)*
-
----
-
 ## Software
 
 | Purpose | Tools |
@@ -227,11 +202,11 @@ NetMHCpan and NetMHCIIpan are distributed by DTU under an academic licence and m
 
 ```bash
 # Part A: genomics (HPC; edit SAMPLES and paths at the top of each script)
-bash scripts/wgs_variant_calling/01_run_minimap_alignment.sh
+bash wgs_variant_calling/01_run_minimap_alignment.sh
 # ... 02 → 07 in order
 
 # Part B: peptide windows
-python scripts/neoantigen_prediction/generate_wt_mt_mhc_peptide_windows.py \
+python neoantigen_prediction/generate_wt_mt_mhc_peptide_windows.py \
     --input-table  <missense_mutations.tsv> \
     --protein-fasta <RefSeq_protein.faa> \
     --output-peptides <ID8_MT_WT_windows.tsv> \
@@ -242,15 +217,3 @@ python scripts/neoantigen_prediction/generate_wt_mt_mhc_peptide_windows.py \
 ```
 
 Raw sequencing data and large intermediate files (BAM, VCF, prediction tables) are not stored in this repository.
-
-## Limitations and future directions
-
-- **Tumor-only variant calling.** No matched normal was available, so some germline / strain-specific variants may remain among the calls. Filtering against known mouse strain variation (e.g. Mouse Genomes Project) or a panel of normals would improve specificity.
-- **Long-read calling with a short-read-oriented caller.** Mutect2 was designed for Illumina data; nanopore-specific errors (notably indels in homopolymers) may affect indel calls. Complementary long-read callers (e.g. Clair3, Sniffles2 for structural variants) are a natural next step.
-- **Computational prediction only.** MHC-binding predictions and expression are evidence for, not proof of, immunogenicity. Mass-spectrometry immunopeptidomics and T-cell assays (ELISpot, tetramer staining) would be required to validate the top candidates.
-- **Peptide processing** (proteasomal cleavage, TAP transport) is only implicitly captured by the presentation-trained models.
-- Planned: workflow management (Snakemake / Nextflow), containerization, and a conda `environment.yml` for full reproducibility.
-
-## Author
-
-**Anna Klimova** — *contact details*
