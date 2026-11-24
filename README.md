@@ -24,7 +24,7 @@ Using an integrative bioinformatics approach, the study combines Oxford Nanopore
 The analysis focuses on two ovarian cancer cell line models:
 
 - **ID8** — parental murine ovarian cancer cell line.
-- **ID8-CPR** — cisplatin-resistant derivative.
+- **ID8-CPR** - cisplatin-resistant derivative.
 
 By integrating genomic variant discovery, transcriptomic evidence, and MHC-binding predictions, this project aims to establish a computational framework for exploring the relationship between chemotherapy resistance and tumor antigenicity.
 
@@ -184,29 +184,11 @@ flowchart TD
 
 This project explores a computational connection between two important challenges in cancer treatment: chemotherapy resistance and tumor immunogenicity.
 
-By integrating long-read genomic sequencing, bulk transcriptomics, and peptide–MHC binding prediction, the workflow provides a framework for moving from raw sequencing data toward biologically interpretable candidate neoantigens.
+By integrating long-read genomic sequencing, bulk transcriptomics, and peptide-MHC binding prediction, the workflow provides a framework for moving from raw sequencing data toward biologically interpretable candidate neoantigens.
 
 The broader scientific motivation is to understand whether genomic changes associated with treatment-resistant cancer models may also reveal potential targets for immune recognition.
 
-Importantly, computationally predicted MHC-binding candidates should be considered hypotheses for further investigation, rather than experimentally validated neoantigens.
-
-## Limitations and Future Directions
-
-Several aspects require further investigation:
-
-- Experimental validation of prioritized mutant peptides.
-- Assessment of peptide presentation by MHC molecules.
-- Functional validation of T-cell recognition.
-- Further investigation of the relationship between cisplatin resistance and tumor immunogenicity.
-- Integration of additional immunological and functional evidence.
-
-Potential future extensions include immunopeptidomics, peptide–MHC validation assays, and functional T-cell experiments.
-
 ## Reproducibility
-
-This repository documents the computational workflow and analytical steps used in the project.
-
-The goal is to make the bioinformatics methodology transparent and facilitate further development of integrative approaches to cancer genomics and neoantigen discovery.
 
 Please refer to the individual scripts and notebooks for implementation details.
 
@@ -221,11 +203,3 @@ This work reflects my broader research interests in:
 - Computational approaches to personalized cancer immunotherapy.
 
 ---
-
-<p align="center">
-  <strong>From genomic variation to potential immune recognition.</strong>
-</p>
-
-<p align="center">
-  <sub>Research in computational oncology and cancer immunology.</sub>
-</p>
