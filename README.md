@@ -54,150 +54,203 @@ This project connects three important dimensions of cancer research:
 - **Cancer transcriptomics:** assessment of transcriptional evidence supporting candidate mutations.
 - **Cancer immunology:** computational evaluation of potential MHC-presented mutant peptides.
 
-## Experimental Models and Data
+---
 
-| Component | Description |
-|---|---|
-| Biological model | Murine ovarian cancer |
-| Parental cell line | ID8 |
-| Resistant cell line | ID8-CPR |
-| DNA sequencing | Oxford Nanopore WGS |
-| RNA sequencing | Illumina bulk RNA-seq |
-| Reference genome | Mus musculus, GRCm38.p6 |
-| Primary objective | Candidate neoantigen discovery and prioritization |
-
-## Computational Workflow
-
-The analytical workflow consists of five major stages.
-
-### 1. Whole-Genome Sequencing Processing
-
-Oxford Nanopore sequencing data were processed to characterize genomic variation.
-
-The workflow included:
-
-- Alignment of long sequencing reads to the mouse reference genome using **Minimap2**.
-- Alignment processing and quality control using **SAMtools**.
-- Independent tumor-only somatic variant calling using **GATK Mutect2**.
-- Variant filtering with **FilterMutectCalls**.
-- Variant normalization and processing using **BCFtools**.
-- Functional annotation using **Ensembl Variant Effect Predictor (VEP)** with RefSeq annotations.
-
-**Objective:** Generate annotated candidate somatic variants for downstream functional and immunological analyses.
-
-### 2. Variant Characterization and Functional Annotation
-
-Identified variants were further investigated to determine their potential functional consequences.
-
-Particular attention was given to:
-
-- Protein-altering variants.
-- Missense mutations.
-- Amino acid substitutions.
-- Variants with potential implications for tumor-specific peptide generation.
-
-This stage helped narrow the initial genomic variant sets to candidates relevant to downstream neoantigen prediction.
-
-### 3. Transcriptomic Analysis
-
-Illumina bulk RNA-seq data were processed to characterize gene expression and evaluate transcriptional evidence.
-
-The analysis included:
-
-- RNA-seq read alignment.
-- Gene-level read counting.
-- Expression quantification.
-- Assessment of expression support for genes containing candidate variants.
-
-Integrating DNA and RNA sequencing evidence is important because a genomic alteration alone does not establish that its corresponding mutant protein or peptide is expressed.
-
-### 4. MHC Binding Prediction
-
-Potential mutant peptides were evaluated using six complementary computational prediction tools targeting MHC class I and class II binding.
-
-The analysis considered:
-
-- Predicted mutant peptide–MHC binding.
-- Wild-type versus mutant peptide binding characteristics.
-- Prediction percentile ranks.
-- Relative enrichment of mutant peptide binding compared with the corresponding wild-type sequence.
-
-Using multiple prediction approaches provides a broader assessment of candidate peptide–MHC interactions than relying on a single prediction algorithm.
-
-### 5. Integrative Neoantigen Prioritization
-
-The final stage combined evidence from genomic, transcriptomic, and immunological analyses.
-
-Candidate prioritization considered:
-
-- Confidence in variant identification.
-- Predicted functional consequences.
-- Transcriptomic support.
-- MHC binding prediction scores.
-- Mutant versus wild-type peptide binding characteristics.
-
-The objective was to identify a shortlist of expressed, protein-altering mutation-derived peptide candidates with promising predicted MHC-binding properties.
-
-## Workflow Summary
+## Workflow at a glance
 
 ```mermaid
 flowchart TD
-    A["ID8 and ID8-CPR ovarian cancer models"] --> B["Oxford Nanopore WGS"]
-    A --> C["Illumina bulk RNA-seq"]
+    subgraph G["A · Genomics (Oxford Nanopore WGS)"]
+        A1[Raw ONT reads] --> A2[Alignment<br/>minimap2 → sorted BAM]
+        A2 --> A3[Variant calling<br/>GATK Mutect2]
+        A3 --> A4[Filtering<br/>FilterMutectCalls → PASS only]
+        A4 --> A5[Normalization<br/>bcftools norm]
+        A5 --> A6[Annotation<br/>Ensembl VEP, RefSeq cache]
+    end
 
-    B --> D["Read alignment and processing"]
-    D --> E["Somatic variant calling"]
-    E --> F["Filtering and normalization"]
-    F --> G["Functional annotation"]
-    G --> H["Protein-altering variants"]
+    subgraph P["B · Mutant peptide generation"]
+        A6 --> B1[Missense variants<br/>RefSeq protein + position]
+        B1 --> B2[All WT / MT peptide windows<br/>8-mer · 9-mer · 15-mer]
+    end
 
-    C --> I["RNA-seq alignment"]
-    I --> J["Read counting and quantification"]
-    J --> K["Expression evidence"]
+    subgraph I["C · Antigen presentation modeling"]
+        D1[Random self-peptide decoys<br/>100,000 per length] --> C2
+        B2 --> C1[Six MHC predictors<br/>class I and class II]
+        C1 --> C2[Percentile rank<br/>vs. decoy distribution]
+    end
 
-    H --> L["Candidate mutant peptides"]
-    K --> M["Transcriptomic support"]
+    subgraph T["D · Transcriptomics (Illumina RNA-seq)"]
+        T1[Transcript TPM<br/>3 replicates per line]
+    end
 
-    L --> N["MHC-I / MHC-II prediction"]
-    M --> O["Integrative prioritization"]
-    N --> O
-
-    O --> P["Prioritized neoantigen candidates"]
+    C2 --> E1[WT→MT improvement<br/>NER = WT rank / MT rank]
+    T1 --> E2[Expression support<br/>mean TPM]
+    E1 --> E3[Prioritization<br/>strong binder · top 5% NER · top 5% TPM]
+    E2 --> E3
+    E3 --> E4[Neoantigen candidates<br/>ID8 vs. ID8-CPR]
 ```
 
-## Computational Tools
+---
 
-| Tool | Application |
-|---|---|
-| Minimap2 | Long-read sequence alignment |
-| SAMtools | Alignment processing |
-| GATK Mutect2 | Somatic variant calling |
-| FilterMutectCalls | Variant filtering |
-| BCFtools | Variant normalization and processing |
-| Ensembl VEP | Functional variant annotation |
-| RNA-seq analysis tools | Transcriptomic processing and quantification |
-| MHC prediction tools | Mutant peptide–MHC binding prediction |
+## Repository structure
 
-## Research Significance
-
-This project explores a computational connection between two important challenges in cancer treatment: chemotherapy resistance and tumor immunogenicity.
-
-By integrating long-read genomic sequencing, bulk transcriptomics, and peptide-MHC binding prediction, the workflow provides a framework for moving from raw sequencing data toward biologically interpretable candidate neoantigens.
-
-The broader scientific motivation is to understand whether genomic changes associated with treatment-resistant cancer models may also reveal potential targets for immune recognition.
-
-## Reproducibility
-
-Please refer to the individual scripts and notebooks for implementation details.
-
-## Research Interests
-
-This work reflects my broader research interests in:
-
-- Cancer bioinformatics and computational oncology.
-- Tumor evolution and therapy resistance.
-- Cancer immunology and neoantigen discovery.
-- Genomic and transcriptomic data integration.
-- Computational approaches to personalized cancer immunotherapy.
+```
+.
+├── README.md
+├── scripts/
+│   ├── wgs_variant_calling/           # Part A: shell scripts, run in order
+│   │   ├── 01_run_minimap_alignment.sh
+│   │   ├── 02_run_mutation_calling.sh
+│   │   ├── 03_run_mutation_filtering.sh
+│   │   ├── 04_select_filtered_mutations.sh
+│   │   ├── 05_print_stats.sh
+│   │   ├── 06_norm_data.sh
+│   │   └── 07_run_vep_with_refseq_cache.sh
+│   └── neoantigen_prediction/         # Parts B–E
+│       ├── generate_wt_mt_mhc_peptide_windows.py
+│       ├── decoy_peptides.ipynb
+│       ├── affinity_tests.ipynb
+│       └── neoantigen_candidate_selection.ipynb
+```
 
 ---
+
+## Methods
+
+### A. Somatic variant discovery from Oxford Nanopore WGS
+
+Both cell lines were sequenced with Oxford Nanopore long reads and analysed with identical code (one loop over the sample list). Reference: mouse genome **GRCm38.p6** (NCBI GCF_000001635.26).
+
+| Step | Script | Tool | What it does |
+|---|---|---|---|
+| 1. Alignment | `01_run_minimap_alignment.sh` | minimap2 `-ax map-ont`, samtools sort | Aligns long reads with the ONT preset; writes read-group metadata and the `MD` tag; streams straight into a coordinate-sorted BAM |
+| 2. Variant calling | `02_run_mutation_calling.sh` | GATK Mutect2 | Calls SNVs and indels by local re-assembly |
+| 3. Filtering | `03_run_mutation_filtering.sh` | GATK FilterMutectCalls | Labels every call with a statistical FILTER verdict (nothing is discarded at this point, so the decision stays auditable) |
+| 4. PASS selection | `04_select_filtered_mutations.sh` | GATK SelectVariants `--exclude-filtered`, IndexFeatureFile | Keeps only calls that passed all filters and indexes the VCF |
+| 5. QC | `05_print_stats.sh` | bcftools stats | Counts records, SNPs and indels before and after filtering |
+| 6. Normalization | `06_norm_data.sh` | bcftools norm `-m -any` | Splits multi-allelic sites and left-aligns indels against the reference |
+| 7. Annotation | `07_run_vep_with_refseq_cache.sh` | Ensembl VEP 102 (offline, RefSeq cache) | Adds gene, transcript, consequence (Sequence Ontology), HGVSc/HGVSp, protein position, amino-acid change, UniProt/CCDS/TSL, 5 kb flanking context |
+
+A chromosome-synonym file maps NCBI contig names (`NC_000067.6`, …) to the names used by the VEP cache, so the NCBI reference could be annotated with the RefSeq transcript set.
+
+### B. From DNA variants to mutant peptides
+
+Protein-altering (**missense**) variants were extracted from the VEP output: one record per mutation × RefSeq transcript, carrying the RefSeq protein ID, protein position, and reference/mutant amino acid.
+
+`generate_wt_mt_mhc_peptide_windows.py` then builds, for every missense mutation, **every possible peptide window that contains the mutated residue**, in matched wild-type (WT) and mutant (MT) pairs:
+
+| MHC molecule | Class | Peptide length |
+|---|---|---|
+| H2-K<sup>b</sup> | I | 8 aa |
+| H2-D<sup>b</sup> | I | 9 aa |
+| I-A<sup>b</sup> | II | 15 aa |
+
+(the three H-2<sup>b</sup> molecules of the C57BL/6 background in which ID8 originates). Windows are generated with a sliding approach: a mutation at protein position *p* is placed at every offset 1…L of a window of length L that still fits inside the protein.
+
+Built-in quality control — a mutation is **skipped and logged with an explicit reason** if the protein ID cannot be resolved (including versionless fallback and ambiguity detection), the position is out of bounds, the reference amino acid in the variant table disagrees with the protein FASTA, or the window contains non-standard residues. The reference-amino-acid cross-check guarantees that the genomic and protein coordinate systems are consistent. The script is general: any allele name and any peptide length can be passed through `--alleles`.
+
+### C. Modeling antigen presentation with six independent predictors
+
+Each WT and MT peptide was scored by an ensemble of complementary, state-of-the-art predictors:
+
+| Class | Predictor | Reported value |
+|---|---|---|
+| I (8-, 9-mers) | **MixMHCpred** | presentation score |
+| I | **NetMHCpan-4.2** | binding-affinity score (BA) |
+| I | **MHCflurry** | predicted affinity (nM) |
+| II (15-mers) | **MixMHC2pred-2** | %rank |
+| II | **NetMHCIIpan-4.3** | predicted affinity (nM) |
+| II | **hmMHC** | −10·log-odds score |
+
+Using several predictors with different architectures and training data reduces dependence on the quirks of any single model.
+
+**Decoy-based percentile ranks.** The raw outputs of different tools are on incompatible scales, and the built-in percentile ranks of the tools are not directly comparable. Therefore, a common empirical reference was built (`decoy_peptides.ipynb`): **100,000 random peptides per length** (8, 9, 15) sampled uniformly from all windows of the mouse proteome (RefSeq proteins, standard amino acids only, fixed random seeds, no duplicates). Decoys were scored by the very same predictors. The score of every candidate peptide was then converted into an **empirical percentile rank within the decoy distribution of the same length** (lower = better binder, with the direction handled correctly for each tool). This puts all six predictors on one interpretable scale: a peptide at the 2nd percentile binds better than 98% of random self-peptides.
+
+Engineering safeguards in `affinity_tests.ipynb`: predictions are generated per sample × peptide type × length batch, each run is logged, row counts are validated after every merge (`validate="one_to_one"`), and the combined table is written per sample and length.
+
+### D. Transcriptional support
+
+Illumina bulk RNA-seq (three biological replicates per cell line) was quantified at transcript level (TPM). Replicate TPMs were averaged per line and joined to every peptide window through its **RefSeq transcript ID**, so that a candidate is evaluated against the expression of the exact transcript that carries the mutation.
+
+### E. Prioritization of neoantigen candidates
+
+`neoantigen_candidate_selection.ipynb` integrates everything:
+
+1. For each peptide, **mean and median percentile rank across the predictors** of the relevant class are computed.
+2. **WT → MT change** is quantified as the *neoantigen enrichment ratio*  
+   `NER = WT percentile rank / MT percentile rank`  
+   (ranks are floored at 50 / N<sub>decoys</sub> to avoid division by zero). A large NER means that the mutation turned a poor binder into a good one.
+3. Only **predicted strong binders** are retained: MT percentile rank ≤ **2 %**.
+4. For each gene, the best peptide is kept, and candidates are plotted as **NER vs. TPM** (log–log), in the style of published neoantigen-prioritization figures.
+5. **High-priority candidates** are those falling in the **top 5 % of both NER and TPM** — i.e. mutations that substantially improve predicted presentation *and* sit in highly expressed transcripts.
+6. The same analysis is repeated **per predictor and per peptide length**, to show which candidates are supported by one tool only and which are reproducible across tools.
+7. A comparison of missense mutations between ID8 and ID8-CPR (Venn diagram) separates mutations shared with the parental line from those specific to the resistant derivative.
+
+---
+
+## Key numbers
+
+| Quantity | ID8 | ID8-CPR |
+|---|---|---|
+| Missense mutation records carried into peptide analysis | 1,103 | 1,070 |
+| MT 8-mer / 9-mer / 15-mer windows | 8,717 / 9,781 / 16,056 | 8,406 / 9,426 / 15,383 |
+| WT 8-mer / 9-mer / 15-mer windows (matched pairs) | 8,717 / 9,781 / 16,056 | 8,406 / 9,426 / 15,383 |
+| Decoy peptides used for percentile ranking | 100,000 per length (300,000 total) | |
+| Peptides scored in total | 135,538 target + 300,000 decoy | |
+
+*Variant counts after filtering (`bcftools stats` output), shared mutations between lines, and the final number of high-priority candidates:*
+
+| Quantity | ID8 | ID8-CPR |
+|---|---|---|
+| PASS SNVs / indels | … | … |
+| Mutations shared between lines | … | |
+| High-priority candidates (strong binder, top 5 % NER, top 5 % TPM) | … | … |
+
+### Top candidates
+
+*(Paste the top rows of `best_candidates_per_tool.xlsx` here: gene, WT peptide, MT peptide, WT/MT percentile rank, NER, TPM.)*
+
+---
+
+## Software
+
+| Purpose | Tools |
+|---|---|
+| Alignment and variant discovery | minimap2, samtools, GATK 4 (Mutect2), bcftools |
+| Annotation | Ensembl VEP 102 (RefSeq cache, GRCm38) |
+| MHC-binding prediction | MixMHCpred, NetMHCpan-4.2, MHCflurry, MixMHC2pred-2, NetMHCIIpan-4.3, hmMHC |
+| Analysis | Python 3.11, NumPy, pandas, SciPy, Biopython, Matplotlib, matplotlib-venn, openpyxl |
+
+NetMHCpan and NetMHCIIpan are distributed by DTU under an academic licence and must be downloaded by the user; they are not included here.
+
+## Reproducing the analysis
+
+```bash
+# Part A: genomics (HPC; edit SAMPLES and paths at the top of each script)
+bash scripts/wgs_variant_calling/01_run_minimap_alignment.sh
+# ... 02 → 07 in order
+
+# Part B: peptide windows
+python scripts/neoantigen_prediction/generate_wt_mt_mhc_peptide_windows.py \
+    --input-table  <missense_mutations.tsv> \
+    --protein-fasta <RefSeq_protein.faa> \
+    --output-peptides <ID8_MT_WT_windows.tsv> \
+    --output-skipped  <ID8_skipped.tsv>
+
+# Parts C–E: run the notebooks in this order
+#   decoy_peptides.ipynb → affinity_tests.ipynb → neoantigen_candidate_selection.ipynb
+```
+
+Raw sequencing data and large intermediate files (BAM, VCF, prediction tables) are not stored in this repository.
+
+## Limitations and future directions
+
+- **Tumor-only variant calling.** No matched normal was available, so some germline / strain-specific variants may remain among the calls. Filtering against known mouse strain variation (e.g. Mouse Genomes Project) or a panel of normals would improve specificity.
+- **Long-read calling with a short-read-oriented caller.** Mutect2 was designed for Illumina data; nanopore-specific errors (notably indels in homopolymers) may affect indel calls. Complementary long-read callers (e.g. Clair3, Sniffles2 for structural variants) are a natural next step.
+- **Computational prediction only.** MHC-binding predictions and expression are evidence for, not proof of, immunogenicity. Mass-spectrometry immunopeptidomics and T-cell assays (ELISpot, tetramer staining) would be required to validate the top candidates.
+- **Peptide processing** (proteasomal cleavage, TAP transport) is only implicitly captured by the presentation-trained models.
+- Planned: workflow management (Snakemake / Nextflow), containerization, and a conda `environment.yml` for full reproducibility.
+
+## Author
+
+**Anna Klimova** — *contact details*
