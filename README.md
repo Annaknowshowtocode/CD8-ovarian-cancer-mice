@@ -23,7 +23,7 @@ Using an integrative bioinformatics approach, the study combines Oxford Nanopore
 
 The analysis focuses on two ovarian cancer cell line models:
 
-- **ID8** — parental murine ovarian cancer cell line.
+- **ID8** - parental murine ovarian cancer cell line.
 - **ID8-CPR** - cisplatin-resistant derivative.
 
 By integrating genomic variant discovery, transcriptomic evidence, and MHC-binding predictions, this project aims to establish a computational framework for exploring the relationship between chemotherapy resistance and tumor antigenicity.
