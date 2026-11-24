@@ -215,5 +215,3 @@ python neoantigen_prediction/generate_wt_mt_mhc_peptide_windows.py \
 # Parts C–E: run the notebooks in this order
 #   decoy_peptides.ipynb → affinity_tests.ipynb → neoantigen_candidate_selection.ipynb
 ```
-
-Raw sequencing data and large intermediate files (BAM, VCF, prediction tables) are not stored in this repository.
