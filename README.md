@@ -66,8 +66,6 @@ This project connects three important dimensions of cancer research:
 | Reference genome | Mus musculus, GRCm38.p6 |
 | Primary objective | Candidate neoantigen discovery and prioritization |
 
-The integration of long-read genomic sequencing and short-read transcriptomic data provides complementary perspectives on the molecular characteristics of the two cancer models.
-
 ## Computational Workflow
 
 The analytical workflow consists of five major stages.
